@@ -285,6 +285,7 @@ def step2_parse_xml(xml: str) -> Dict:
 
 def step3_get_lm_review(parsed_xml: Dict) -> Dict:
     text_to_send = prompt_function_truncated_full_paper(parsed_xml)
+    return text_to_send
     review_generated = wrapper.send_query(text_to_send, n_query=1)
     return {"text_to_send": text_to_send, "review_generated": review_generated}
 
@@ -312,15 +313,17 @@ def process(file_content):
         print(f"Generating review...")
         review_generated = step3_get_lm_review(parsed_xml)
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return f"Failed to generate review... Error: {e}"
 
-    return review_generated["review_generated"]
+    return review_generated
 
 
 def main():
     upload_component = gr.File(label="Upload PDF", type="binary")
 
-    output_component_review = gr.Textbox(label="Review Generated")
+    output_component_review = gr.Textbox(label="Prompt")
 
     demo = gr.Interface(
         fn=process, inputs=upload_component, outputs=output_component_review
