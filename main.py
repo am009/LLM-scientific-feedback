@@ -187,6 +187,46 @@ def truncate(input_text: str, max_tokens: int, wrapper) -> str:
     return truncated_text
 
 
+def full_paper_txt(parsed_xml: Dict):
+    return f"""
+Your task now is to draft a high-quality review outline for a top-tier Machine Learning (ML) conference for a submission titled "{parsed_xml['title']}":
+
+Abstract:
+```
+{parsed_xml['abstract']}
+```
+
+Introduction:
+```
+{parsed_xml['introduction']}
+```
+
+Figures/Tables Captions:
+```
+{parsed_xml['figure_and_table_captions']}
+```
+
+Main Content:
+```
+{parsed_xml['main_content']}
+```
+
+
+======
+Your task:
+Compose a high-quality peer review of an ML paper submitted to a top-tier ML conference on OpenReview.
+
+Start by "Review outline:".
+And then:
+"1. Significance and novelty"
+"2. Potential reasons for acceptance"
+"3. Potential reasons for rejection", List 4 key reasons. For each of 4 key reasons, use **>=2 sub bullet points** to further clarify and support your arguments in painstaking details.
+"4. Suggestions for improvement", List 4 key suggestions.
+
+Be thoughtful and constructive. Write Outlines only.
+
+"""
+
 def prompt_function_truncated_full_paper(parsed_xml: Dict):
     truncated_paper = truncate(
         f"""Abstract:
@@ -319,11 +359,35 @@ def process(file_content):
 
     return review_generated
 
+def pdf2text(file_content):
+    if not os.path.exists("cache"):
+        os.makedirs("cache")
+    file_name = f"cache/{time.time()}.pdf"
+    with open(file_name, "wb") as f:
+        f.write(file_content)
+    try:
+        print(f"Parsing PDF...")
+        xml = step1_get_xml(file_name)
+    except Exception as e:
+        return f"Failed to parse PDF... Error: {e}"
+    
+    try:
+        print(f"Parsing XML...")
+        parsed_xml = step2_parse_xml(xml)
+    except Exception as e:
+        return f"Failed to parse XML... Error: {e}"
+
+    return full_paper_txt(parsed_xml)
 
 def main():
     upload_component = gr.File(label="Upload PDF", type="binary")
 
     output_component_review = gr.Textbox(label="Prompt")
+
+    output_component_text = gr.Textbox(label="pdf2txt")
+
+    btn = gr.Button("Full Prompt")
+    btn.click(fn=pdf2text, inputs=upload_component, outputs=output_component_text, api_name="Full Prompt")
 
     demo = gr.Interface(
         fn=process, inputs=upload_component, outputs=output_component_review
