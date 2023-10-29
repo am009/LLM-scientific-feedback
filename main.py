@@ -349,45 +349,20 @@ def process(file_content):
     except Exception as e:
         return f"Failed to parse XML... Error: {e}"
 
-    try:
-        print(f"Generating review...")
-        review_generated = step3_get_lm_review(parsed_xml)
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return f"Failed to generate review... Error: {e}"
-
-    return review_generated
-
-def pdf2text(file_content):
-    if not os.path.exists("cache"):
-        os.makedirs("cache")
-    file_name = f"cache/{time.time()}.pdf"
-    with open(file_name, "wb") as f:
-        f.write(file_content)
-    try:
-        print(f"Parsing PDF...")
-        xml = step1_get_xml(file_name)
-    except Exception as e:
-        return f"Failed to parse PDF... Error: {e}"
-    
-    try:
-        print(f"Parsing XML...")
-        parsed_xml = step2_parse_xml(xml)
-    except Exception as e:
-        return f"Failed to parse XML... Error: {e}"
+    # try:
+    #     print(f"Generating review...")
+    #     review_generated = step3_get_lm_review(parsed_xml)
+    # except Exception as e:
+    #     import traceback
+    #     traceback.print_exc()
+    #     return f"Failed to generate review... Error: {e}"
 
     return full_paper_txt(parsed_xml)
 
 def main():
     upload_component = gr.File(label="Upload PDF", type="binary")
 
-    output_component_review = gr.Textbox(label="Prompt")
-
-    output_component_text = gr.Textbox(label="pdf2txt")
-
-    btn = gr.Button("Full Prompt")
-    btn.click(fn=pdf2text, inputs=upload_component, outputs=output_component_text, api_name="Full Prompt")
+    output_component_review = gr.Textbox(label="Full Prompt(太长了就删掉点正文)")
 
     demo = gr.Interface(
         fn=process, inputs=upload_component, outputs=output_component_review
